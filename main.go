@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,12 +11,15 @@ const compiler string = "gcc"
 const logFile string = "/tmp/gcc.log"
 
 func main() {
-	output, err := exec.Command(compiler, os.Args...).CombinedOutput()
+	cmd := exec.Command(compiler, os.Args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		fmt.Fprintf(os.Stderr, "%s", stderr.String())
 		return
 	}
-	fmt.Println(string(output))
 
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
@@ -27,7 +31,7 @@ func main() {
 	if _, err = f.WriteString(fmt.Sprintln("ARG: ", os.Args)); err != nil {
 		panic(err)
 	}
-	if _, err = f.Write(output); err != nil {
+	if _, err = f.Write(stdout.Bytes()); err != nil {
 		panic(err)
 	}
 }
