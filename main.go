@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 const compiler string = "gcc"
@@ -28,11 +29,21 @@ func main() {
 
 	fmt.Println(stdout.String())
 
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	fmt.Println(exPath)
+
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
 	}
 
+	if _, err = f.WriteString(fmt.Sprintln("Dir: ", exPath)); err != nil {
+		panic(err)
+	}
 	if _, err = f.WriteString(fmt.Sprintln("ARG: ", os.Args)); err != nil {
 		panic(err)
 	}
